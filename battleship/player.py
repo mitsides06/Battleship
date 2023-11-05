@@ -168,6 +168,20 @@ class AutomaticPlayer(Player):
         super().__init__(board=Board(), name=name)
         
         # TODO: Add any other attributes necessary for your strategic player
+
+        self.unsuccessful_directions = []
+
+        self.tracker = set()    # for the same purpose as the random player
+
+        self.prev_result = (False, False)  # 2-tuple the result of (is_ship_hit, has_ship_sunk) from the previous attack
+
+        self.target = None  # the cell of the first successful hit to a ship
+
+        self.prev_move = None  # the cell corresponing to the previous move
+
+        self.direction = None   # the direction we moved, once we established the first successful hit to a ship
+
+        self.dict_target = {}   # dictionary with key the cell of the first successful hit to a ship, and value a list consisting of the other cells of the ship
         
         
     def select_target(self):
@@ -178,4 +192,172 @@ class AutomaticPlayer(Player):
                 next attack
         """
         # TODO: Complete this method
-        return (1, 1)
+        if self.prev_move is not None:
+            possibe_moves_from_prev_move = {"left" : self.move_left(self.prev_move), "right" : self.move_right(self.prev_move),
+                                            "up" : self.move_up(self.prev_move), "down" : self.move_down(self.prev_move)}
+        if self.target is not None:
+            possibe_moves_from_target = {"left" : self.move_left(self.target), "right" : self.move_right(self.target),
+                                        "up" : self.move_up(self.target), "down" : self.move_down(self.target)}
+
+        
+
+        # The very start
+        if len(self.tracker) == 0:
+            target_cell = self.generate_random_target()
+            self.prev_move = target_cell
+            self.dict_target[target_cell] = []
+            self.tracker.add(target_cell)
+            print(target_cell)
+
+            return target_cell
+        
+        
+        #  Stage where we choose randomly our move as opponent's ship has been sunk
+        elif self.prev_result[-1]:
+            self.unsuccessful_directions = []
+            self.dict_target = {}
+            target_cell = self.generate_random_target()
+            self.target = None
+            self.prev_move = target_cell
+            self.dict_target[target_cell] = []
+            self.tracker.add(target_cell)
+            print(target_cell)
+
+            return target_cell
+        
+        #  Stage where we have already successfully hit a ship, and we keep trying to make it sink
+        elif self.prev_result[0]:
+            # Check if our previous move was the first successfull hit on the ship
+            if self.target == None:
+                self.target = self.prev_move
+                for direction in list(possibe_moves_from_prev_move.keys()):
+                    if self.is_valid(possibe_moves_from_prev_move[direction]):
+                        self.direction = direction
+                        target_cell = possibe_moves_from_prev_move[direction]
+                        self.prev_move = target_cell
+                        self.tracker.add(target_cell)
+                        print(target_cell)
+
+                        return target_cell
+      
+            # If this is not the first successful hit on a ship
+            else:
+                self.dict_target[self.target].append(self.prev_move)
+
+                # continue trying in the successful direction if valid
+                if self.is_valid(possibe_moves_from_prev_move[self.direction]):
+                    target_cell = possibe_moves_from_prev_move[self.direction]
+                    self.prev_move = target_cell
+                    self.tracker.add(target_cell)
+                    print(target_cell)
+
+                    return target_cell
+                
+                # If not valid, try opposite direction, but change pivot point to self.target
+                else:
+                    new_direction = self.opposite_direction(self.direction)
+                    self.direction = new_direction
+                    target_cell = possibe_moves_from_target[self.direction]
+                    self.prev_move = target_cell
+                    self.tracker.add(target_cell)
+                    print(target_cell)
+
+                    return target_cell
+                
+        # If previous hit was unsuccesfull
+        else:
+            # Check if we were already working to make a ship sink
+            if self.target is not None:
+                self.unsuccessful_directions.append(self.direction)
+                for direction in possibe_moves_from_target.keys():
+                    if direction not in self.unsuccessful_directions:
+                        if self.is_valid(possibe_moves_from_target[direction]):
+                            self.direction = direction
+                            target_cell = possibe_moves_from_target[self.direction]
+                            self.prev_move = target_cell
+                            self.tracker.add(target_cell)
+                            print(target_cell)
+
+                            return target_cell
+            
+            # If we haven't recently successfully hit a ship
+            else:
+                target_cell = self.generate_random_target()
+                self.prev_move = target_cell
+                self.dict_target[target_cell] = []
+                self.tracker.add(target_cell)
+                print(target_cell)
+
+                return target_cell
+
+                
+
+
+
+
+            
+
+                
+
+    
+                
+            
+    
+    def receive_result(self, is_ship_hit, has_ship_sunk):
+        
+        self.prev_result = (is_ship_hit, has_ship_sunk)
+
+
+    def is_valid(self, cell):
+        return (cell not in self.tracker) and (1 <= cell[0] <= self.board.width) \
+                and (1 <= cell[1] <= self.board.height)
+    
+    def move_left(self, curr_cell):
+        return (curr_cell[0]-1, curr_cell[1])
+    
+    def move_right(self, curr_cell):
+        return (curr_cell[0]+1, curr_cell[1])
+    
+    def move_up(self, curr_cell):
+        return (curr_cell[0], curr_cell[1]-1)
+    
+    def move_down(self, curr_cell):
+        return (curr_cell[0], curr_cell[1]+1)
+    
+    def opposite_direction(self, direction):
+        if direction == "left":
+            return "right"
+        elif direction == "right":
+            return "left"
+        elif direction == "up":
+            return "down"
+        else:
+            return "up"
+    
+    def generate_random_target(self):
+        """ Generate a random cell that has previously not been attacked.
+               
+        Returns:
+            tuple[int, int] : (x, y) cell coordinates at which to launch the 
+                next attack
+        """
+        has_been_attacked = True
+        random_cell = None
+        
+        while has_been_attacked:
+            random_cell = self.get_random_coordinates()
+            has_been_attacked = random_cell in self.tracker
+
+        return random_cell
+
+    def get_random_coordinates(self):
+        """ Generate random coordinates.
+               
+        Returns:
+            tuple[int, int] : (x, y) cell coordinates at which to launch the 
+                next attack
+        """
+        x = random.randint(1, self.board.width)
+        y = random.randint(1, self.board.height)
+        return (x, y)
+    

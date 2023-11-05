@@ -97,7 +97,14 @@ class Board:
                 Return False otherwise.
         """
         # TODO: Complete this method
-        return False
+        for ship in self.ships:
+            if ship.x_start < 1 or ship.x_end < 1 or \
+            ship.x_start > self.width or ship.x_end > self.width or \
+            ship.y_start < 1 or ship.y_end < 1 or \
+            ship.y_start > self.height or ship.y_start > self.height:
+                return False
+            
+        return True
         
     def are_ships_too_close(self):
         """ Check whether there is at least a pair of ships that are too close.
@@ -108,7 +115,17 @@ class Board:
                 otherwise
         """
         # TODO: Complete this method
+        idx = 0
+        while idx < len(self.ships) - 1:
+            ship_1 = self.ships[idx]
+            for ship_2 in self.ships[idx+1 : ]:
+                if ship_1.is_near_ship(ship_2):
+                    return True
+            
+            idx += 1
+
         return False
+    
         
     def have_all_ships_sunk(self):
         """ Check whether all ships have sunk.
@@ -118,7 +135,11 @@ class Board:
                return False otherwise.
         """
         # TODO: Complete this method
-        return False
+        for ship in self.ships:
+            if not ship.has_sunk():
+                return False
+        
+        return True
     
     def is_attacked_at(self, cell):
         """ Board is attacked at an (x, y) cell coordinate.
@@ -140,9 +161,20 @@ class Board:
         """
         # Mark the cell that has been attacked for visualisation purposes
         self.marked_cells.add(cell)
-        
+
         # TODO: Complete this method
+        for ship in self.ships:
+            if ship.receive_damage(cell):
+                if ship.has_sunk():
+                    return True, True
+
+                return True, False
+        
         return False, False
+
+        
+        
+    
         
     def print(self, show_ships=False):
         """ Visualise the board on the terminal.
@@ -221,7 +253,7 @@ if __name__ == '__main__':
     board.print(show_ships=True)
     is_ship_hit, is_ship_sunk = board.is_attacked_at((3, 4))
     print(is_ship_hit, is_ship_sunk)
-    
+
     # Automatic board
     board = Board()
     print(board.ships)

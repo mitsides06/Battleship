@@ -62,7 +62,8 @@ class Ship:
             bool : True if the ship is vertical. False otherwise.
         """
         # TODO: Complete this method
-        return False
+
+        return self.x_start == self.x_end
    
     def is_horizontal(self):
         """ Check whether the ship is horizontal.
@@ -71,7 +72,7 @@ class Ship:
             bool : True if the ship is horizontal. False otherwise.
         """
         # TODO: Complete this method
-        return False
+        return self.y_start == self.y_end
     
     def get_cells(self):
         """ Get the set of all cell coordinates that the ship occupies.
@@ -85,7 +86,19 @@ class Ship:
             set[tuple] : Set of (x ,y) coordinates of all cells a ship occupies
         """
         # TODO: Complete this method
-        return set()
+        if self.is_horizontal():
+            if self.x_start > self.x_end:
+                return set((i, self.y_start) for i in range(self.x_end, self.x_start+1))
+            else:
+                return set((i, self.y_start) for i in range(self.x_start, self.x_end+1))
+        
+        else:
+            if self.y_start > self.y_end:
+                return set((self.x_start, i) for i in range(self.y_end, self.y_start+1))
+            else:
+                return set((self.x_start, i) for i in range(self.y_start, self.y_end+1))
+            
+
 
     def length(self):
         """ Get length of ship (the number of cells the ship occupies).
@@ -94,7 +107,10 @@ class Ship:
             int : The number of cells the ship occupies
         """
         # TODO: Complete this method
-        return 0
+        if self.is_horizontal():
+            return abs(self.x_end - self.x_start) + 1
+        else:
+            return abs(self.y_start - self.y_end) + 1
 
     def is_occupying_cell(self, cell):
         """ Check whether the ship is occupying a given cell
@@ -108,7 +124,7 @@ class Ship:
                 by the ship. Otherwise, return False
         """
         # TODO: Complete this method
-        return False
+        return cell in self.get_cells()
     
     def receive_damage(self, cell):
         """ Receive attack at given cell. 
@@ -127,6 +143,10 @@ class Ship:
                 Return False otherwise.
         """
         # TODO: Complete this method
+        if self.is_occupying_cell(cell):
+            self.damaged_cells.add(cell)
+            return True
+        
         return False
     
     def count_damaged_cells(self):
@@ -136,7 +156,7 @@ class Ship:
             int : the number of cells that are damaged.
         """
         # TODO: Complete this method
-        return 0
+        return len(self.damaged_cells)
         
     def has_sunk(self):
         """ Check whether the ship has sunk.
@@ -146,7 +166,12 @@ class Ship:
                 Otherwise, return False
         """
         # TODO: Complete this method
-        return False
+        for cell in self.get_cells():
+            if cell not in self.damaged_cells:
+                return False
+        
+        return True
+
     
     def is_near_ship(self, other_ship):
         """ Check whether a ship is near another ship instance.
@@ -161,6 +186,10 @@ class Ship:
                 near to this ship. Returns False otherwise.
         """
         # TODO: Complete this method
+        for cell in other_ship.get_cells():
+            if self.is_near_cell(cell):
+                return True
+        
         return False
 
     def is_near_cell(self, cell):
@@ -206,6 +235,9 @@ class ShipFactory:
                 the count as values. Defaults to 1 ship each for lengths 1-5.
         """
         self.board_size = board_size
+
+        # The following will help with the ship generation
+        self.forbidden_cells = set()
         
         if ships_per_length is None:
             # Default: lengths 1 to 5, one ship each
@@ -248,12 +280,53 @@ class ShipFactory:
         """
         # TODO: Complete this method
         ships = []
+        for length, count in self.ships_per_length.items():
+            for i in range(count):
+                ship = self.create_ship(length)
+                ships.append(ship)
         return ships
+    
+    def create_ship(self, length):
+        valid = False
+        while not valid:
+            direction = random.randint(0,1)   # direction parallel to the largest side of the ship
+            other_direction = (direction + 1) % 2 # direction perpendicular to the direction variable
+            max_cell_coordinate = self.board_size[direction] - length + 1
+            start_coordinate = random.randint(1, max_cell_coordinate)
+            other_direction_coordinate = random.randint(1, self.board_size[other_direction])
+            start = [None, None]
+            end = [None, None]
+            start[direction] = start_coordinate
+            start[other_direction] = other_direction_coordinate
+            end[direction] = start_coordinate + length - 1
+            end[other_direction] = other_direction_coordinate
+            start = tuple(start)
+            end = tuple(end)
+            ship = Ship(start=start,end=end)
+            valid = True
+            for cell in ship.get_cells():
+                if cell in self.forbidden_cells:
+                    valid = False
+                    break
+            if valid == True:
+                self.update_forbidden_cells(ship)
+
+        return ship
+
+
+    def update_forbidden_cells(self, ship):
+        self.forbidden_cells.update(ship.get_cells())
+        if ship.is_horizontal():
+            add_set = set((x, y ) for x in range(max(ship.x_start-1, 1), min(11, ship.x_end+2)) for y in [max(1, ship.y_start-1), min(10, ship.y_end+1), ship.y_start])
+        else:
+            add_set = set((x, y ) for x in [max(1, ship.x_start-1), min(10, ship.x_end+1), ship.x_start] for y in range(max(1, ship.y_start-1), min(11, ship.y_end+2)))
+        self.forbidden_cells.update(add_set)
+
         
         
 if __name__ == '__main__':
     # SANDBOX for you to play and test your methods
-
+    """
     ship = Ship(start=(3, 3), end=(5, 3))
     print(ship.get_cells())
     print(ship.length())
@@ -264,9 +337,46 @@ if __name__ == '__main__':
     print(ship.receive_damage((4, 3)))
     print(ship.receive_damage((10, 3)))
     print(ship.damaged_cells)
-    
+    """
     ship2 = Ship(start=(4, 1), end=(4, 5))
-    print(ship.is_near_ship(ship2))
+    #print(ship.is_near_ship(ship2))
+
+    # my test cases
+    my_ship = Ship(start=(3,10), end=(3,1))
+    ship_cells = my_ship.get_cells()
+    assert {(3,1), (3,2), (3,3), (3,4), (3,5), (3,6), (3,7), (3,8), (3,9), (3,10)} == ship_cells
+    print(ship_cells)
+    direction_h = my_ship.is_horizontal()
+    assert direction_h == False
+    direction_v = my_ship.is_vertical()
+    assert direction_v == True
+    length = my_ship.length()
+    assert length == 10
+    my_ship.receive_damage((3,1))
+    my_ship.receive_damage((3,6))
+    my_ship.receive_damage((3,10))
+    my_ship.receive_damage((4,4))
+    no_damaged_cells = my_ship.count_damaged_cells()
+    assert no_damaged_cells == 3
+    print(my_ship.damaged_cells)
+    near_ship_t = my_ship.is_near_ship(ship2)
+    assert near_ship_t == True
+    near_cell_t = my_ship.is_near_cell((4,11))
+    assert near_cell_t == True
+    near_cell_f = my_ship.is_near_cell((3,12))
+    assert near_cell_f == False
+
+    ships = [
+        Ship(start=(3, 1), end=(3, 5)),  # length = 5
+        Ship(start=(9, 7), end=(9, 10)),  # length = 4
+        Ship(start=(1, 9), end=(3, 9)),  # length = 3
+        Ship(start=(5, 2), end=(6, 2)),  # length = 2
+        Ship(start=(8, 3), end=(8, 3)),  # length = 1
+    ]
+    for ship in ships:
+        print(ship.length())
+
+
 
     # For Task 3
     ships = ShipFactory().generate_ships()
