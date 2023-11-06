@@ -172,7 +172,7 @@ class AutomaticPlayer(Player):
         
         # TODO: Add any other attributes necessary for your strategic player
 
-        self.unsuccessful_directions = []
+        self.unsuccessful_directions = []  # needed to track the directions tried
 
         self.tracker = set()    # for the same purpose as the random player
 
@@ -315,7 +315,7 @@ class AutomaticPlayer(Player):
 
 
     def is_valid(self, cell):
-        """ Check if the cell is within the board and that thhis particular cell has not been used for attack yet.
+        """ Check if the cell is within the board and that this particular cell has not been used for attack yet.
 
             Args:
                 cell (tuple) : 2-tuple of the coordinates of the cell
@@ -371,7 +371,7 @@ class AutomaticPlayer(Player):
         return (curr_cell[0], curr_cell[1]+1)
     
     def opposite_direction(self, direction):
-        """ Find the opposite direction of the direction (input in thsi functio).
+        """ Find the opposite direction of the direction (input of this function).
 
             Args:
                 direction (str) : "left" or "right" or "up" or "down"

@@ -287,7 +287,7 @@ class ShipFactory:
         return ships
 
     def create_ship_input(self, length, direction, other_direction, start_coordinate, other_direction_coordinate):
-        """ Creat the input of the ship to be used in the create_ship function.
+        """ Create the input of the ship to be used in the create_ship function.
 
             Args:
                 length (int) : The length of the ship
@@ -301,7 +301,7 @@ class ShipFactory:
 
             Returns:
                 tuple : a 2-tuple consisting the starting cell of the cell as a first element, 
-                        and the ending cell fo the ship as a second element
+                        and the ending cell of the ship as a second element
         """
         start = [None, None]
         end = [None, None]
@@ -316,7 +316,7 @@ class ShipFactory:
     
 
     def create_ship(self, length):
-        """ Create ship of length length (the input of this function) which is not near any other ship.
+        """ Create ship of length length (the input of this function) which is not near to any other ship.
 
             Args:
                 length (int) : the length of the ship
@@ -349,7 +349,7 @@ class ShipFactory:
 
     def update_forbidden_cells(self, ship):
         """ We update the update_fobridden_cells attrribute every time we create a valid ship. 
-            This is a set that helps us know whenever a creation of a ship is valid or not.
+            This is a set that helps us check if a creation of a ship is valid or not.
 
             Args:
                 Ship (instance) : Ship instance
