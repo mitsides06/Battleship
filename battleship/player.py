@@ -157,7 +157,10 @@ class RandomPlayer(Player):
 
 
 class AutomaticPlayer(Player):
-    """ Player playing automatically using a strategy."""
+    """ The strategy goes as follows: We randomly attack cells, and once we successfully hit a ship, 
+        we save the coordinates of that successful cell and start hitting its neighbors until the ship sinks. 
+        Once the ship has sunk, we continue with the same strategy.
+    """
     def __init__(self, name=None):
         """ Initialise the player with an automatic board and other attributes.
         
@@ -173,15 +176,14 @@ class AutomaticPlayer(Player):
 
         self.tracker = set()    # for the same purpose as the random player
 
-        self.prev_result = (False, False)  # 2-tuple the result of (is_ship_hit, has_ship_sunk) from the previous attack
+        self.prev_result = (False, False)  # 2-tuple of the result of (is_ship_hit, has_ship_sunk) from the previous attack
 
-        self.target = None  # the cell of the first successful hit to a ship
+        self.target = None  # the cell of the first successful hit to a particular ship
 
         self.prev_move = None  # the cell corresponing to the previous move
 
-        self.direction = None   # the direction we moved, once we established the first successful hit to a ship
+        self.direction = None   # the direction we moved, having already successfully hit a particular ship
 
-        self.dict_target = {}   # dictionary with key the cell of the first successful hit to a ship, and value a list consisting of the other cells of the ship
         
         
     def select_target(self):
@@ -205,7 +207,6 @@ class AutomaticPlayer(Player):
         if len(self.tracker) == 0:
             target_cell = self.generate_random_target()
             self.prev_move = target_cell
-            self.dict_target[target_cell] = []
             self.tracker.add(target_cell)
             print(target_cell)
 
@@ -219,7 +220,6 @@ class AutomaticPlayer(Player):
             target_cell = self.generate_random_target()
             self.target = None
             self.prev_move = target_cell
-            self.dict_target[target_cell] = []
             self.tracker.add(target_cell)
             print(target_cell)
 
@@ -242,8 +242,6 @@ class AutomaticPlayer(Player):
       
             # If this is not the first successful hit on a ship
             else:
-                self.dict_target[self.target].append(self.prev_move)
-
                 # continue trying in the successful direction if valid
                 if self.is_valid(possibe_moves_from_prev_move[self.direction]):
                     target_cell = possibe_moves_from_prev_move[self.direction]
@@ -284,7 +282,6 @@ class AutomaticPlayer(Player):
             else:
                 target_cell = self.generate_random_target()
                 self.prev_move = target_cell
-                self.dict_target[target_cell] = []
                 self.tracker.add(target_cell)
                 print(target_cell)
 
@@ -304,27 +301,84 @@ class AutomaticPlayer(Player):
             
     
     def receive_result(self, is_ship_hit, has_ship_sunk):
+        """ Save the results of our previous move to the self.prev_result attribute.
+
+            Args: 
+                is_ship_hit (bool) :  True or False
+                has_ship_sunk (bool) :  True or False
+
+            Returns:
+                None
+        """
         
         self.prev_result = (is_ship_hit, has_ship_sunk)
 
 
     def is_valid(self, cell):
+        """ Check if the cell is within the board and that thhis particular cell has not been used for attack yet.
+
+            Args:
+                cell (tuple) : 2-tuple of the coordinates of the cell
+            
+            Returns:
+                bool : True if this cell is valid to be used for next attack, False otherwise.
+        """
         return (cell not in self.tracker) and (1 <= cell[0] <= self.board.width) \
                 and (1 <= cell[1] <= self.board.height)
     
     def move_left(self, curr_cell):
+        """ Move one cell to the left.
+
+            Args:
+                curr_cell (tuple) : 2-tuple of the coordinates of the current cell
+            
+            Returns:
+                tuple : 2-tuple of the coodinates of cell which is one step to the left of the current one.
+        """ 
         return (curr_cell[0]-1, curr_cell[1])
     
     def move_right(self, curr_cell):
+        """ Move one cell to the right.
+
+            Args:
+                curr_cell (tuple) : 2-tuple of the coordinates of the current cell
+            
+            Returns:
+                tuple : 2-tuple of the coodinates of cell which is one step to the right of the current one.
+        """ 
         return (curr_cell[0]+1, curr_cell[1])
     
     def move_up(self, curr_cell):
+        """ Move one cell up.
+
+            Args:
+                curr_cell (tuple) : 2-tuple of the coordinates of the current cell
+            
+            Returns:
+                tuple : 2-tuple of the coodinates of cell which is one step above the current one.
+        """ 
         return (curr_cell[0], curr_cell[1]-1)
     
     def move_down(self, curr_cell):
+        """ Move one cell down.
+
+            Args:
+                curr_cell (tuple) : 2-tuple of the coordinates of the current cell
+            
+            Returns:
+                tuple : 2-tuple of the coodinates of cell which is one step below the current one.
+        """ 
         return (curr_cell[0], curr_cell[1]+1)
     
     def opposite_direction(self, direction):
+        """ Find the opposite direction of the direction (input in thsi functio).
+
+            Args:
+                direction (str) : "left" or "right" or "up" or "down"
+            
+            Returns:
+                str : opposite direction of direction as a string
+        """
         if direction == "left":
             return "right"
         elif direction == "right":
