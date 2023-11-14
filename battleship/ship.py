@@ -291,17 +291,22 @@ class ShipFactory:
 
             Args:
                 length (int) : The length of the ship
-                direction (int) : 0 or 1, depending on the direction we want our ship to be longest, 
-                                  0 if along x-direction, 1 if along y-direction                                
-                other_direction (int) : if direction is 0 then this is 1, and vice versa
-                start_coordinate (int) : the x-coordinate value or the y-coordinate value (depending on the direction)
-                                         of the starting cell of the ship
-                other_direction_coordinate (int) : if start_coordinate is the x-coordinate value, then this is the 
-                                                    y-coordinate value, and vice versa
+                direction (int) : 0 or 1, depending on the direction we want our 
+                        ship to be longest,0 if along x-direction,
+                        1 if along y-direction.                               
+                other_direction (int) : if direction is 0 then this is 1, and 
+                        vice versa.
+                start_coordinate (int) : the x-coordinate value or the 
+                        y-coordinate value (depending on the direction)
+                        of the starting cell of the ship.
+                other_direction_coordinate (int) : if start_coordinate is the 
+                        x-coordinate value, then this is the y-coordinate 
+                        value, and vice versa.
 
             Returns:
-                tuple : a 2-tuple consisting the starting cell of the cell as a first element, 
-                        and the ending cell of the ship as a second element
+                tuple : a 2-tuple consisting the starting cell of the cell as a 
+                    first element, and the ending cell of the 
+                    ship as a second element.
         """
         start = [None, None]
         end = [None, None]
@@ -316,7 +321,8 @@ class ShipFactory:
     
 
     def create_ship(self, length):
-        """ Create ship of length length (the input of this function) which is not near to any other ship.
+        """ Create ship of length length (the input of this function) which 
+            is not near to any other ship.
 
             Args:
                 length (int) : the length of the ship
@@ -326,8 +332,12 @@ class ShipFactory:
         """
         valid = False
         while not valid:
-            direction = random.randint(0,1)   # direction parallel to the largest side of the ship
-            other_direction = (direction + 1) % 2 # direction perpendicular to the direction variable
+            # direction parallel to the largest side of the ship
+            direction = random.randint(0,1)   
+
+            # direction perpendicular to the direction variable
+            other_direction = (direction + 1) % 2 
+
             max_cell_coordinate = self.board_size[direction] - length + 1
             start_coordinate = random.randint(1, max_cell_coordinate)
             other_direction_coordinate = random.randint(1, self.board_size[other_direction])
@@ -348,8 +358,9 @@ class ShipFactory:
 
 
     def update_forbidden_cells(self, ship):
-        """ We update the update_fobridden_cells attrribute every time we create a valid ship. 
-            This is a set that helps us check if a creation of a ship is valid or not.
+        """ We update the update_fobridden_cells attrribute every time we 
+            create a valid ship. This is a set that helps us check if a 
+            creation of a ship is valid or not.
 
             Args:
                 Ship (instance) : Ship instance
