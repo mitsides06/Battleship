@@ -1,3 +1,5 @@
+# Battleship Game Simulator
+
 ## Project Description
 This project is a Python-based simulation of the classic Battleship game. It includes modules for creating and managing the game board, players, ships, and game logic. The project allows for various simulations, including automatic and manual player modes.
 
